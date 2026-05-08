@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
+import { LanguageProvider } from './context/LanguageContext';
 import Navbar from './components/Navbar/Navbar';
 import ProtectedRoute from './components/ProtectedRoute';
 import Home from './pages/Home/Home';
@@ -22,36 +23,38 @@ import './index.css';
 export default function App() {
   return (
     <Router>
-      <AuthProvider>
-        <Navbar />
-        <main>
-          <Routes>
-            {/* Public */}
-            <Route path="/" element={<Home />} />
-            <Route path="/services" element={<Home />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
+      <LanguageProvider>
+        <AuthProvider>
+          <Navbar />
+          <main>
+            <Routes>
+              {/* Public */}
+              <Route path="/" element={<Home />} />
+              <Route path="/services" element={<Home />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
 
-            {/* Protected — Citizen */}
-            <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-            <Route path="/demandes" element={<ProtectedRoute><DemandesList /></ProtectedRoute>} />
-            <Route path="/demandes/create" element={<ProtectedRoute><CreateDemande /></ProtectedRoute>} />
-            <Route path="/demandes/:id" element={<ProtectedRoute><DemandeDetail /></ProtectedRoute>} />
-            <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
-            <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+              {/* Protected — Citizen */}
+              <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+              <Route path="/demandes" element={<ProtectedRoute><DemandesList /></ProtectedRoute>} />
+              <Route path="/demandes/create" element={<ProtectedRoute><CreateDemande /></ProtectedRoute>} />
+              <Route path="/demandes/:id" element={<ProtectedRoute><DemandeDetail /></ProtectedRoute>} />
+              <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
+              <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
 
-            {/* CIN Process */}
-            <Route path="/cin" element={<ProtectedRoute><CINProcess /></ProtectedRoute>} />
+              {/* CIN Process */}
+              <Route path="/cin" element={<ProtectedRoute><CINProcess /></ProtectedRoute>} />
 
-            {/* Admin Only */}
-            <Route path="/admin" element={<ProtectedRoute adminOnly><AdminDashboard /></ProtectedRoute>} />
-            <Route path="/admin/demandes" element={<ProtectedRoute adminOnly><AdminDemandes /></ProtectedRoute>} />
-            <Route path="/admin/users" element={<ProtectedRoute adminOnly><AdminUsers /></ProtectedRoute>} />
-            <Route path="/admin/logs" element={<ProtectedRoute adminOnly><AdminLogs /></ProtectedRoute>} />
-            <Route path="/admin/create" element={<ProtectedRoute adminOnly><AdminCreate /></ProtectedRoute>} />
-          </Routes>
-        </main>
-      </AuthProvider>
+              {/* Admin Only */}
+              <Route path="/admin" element={<ProtectedRoute adminOnly><AdminDashboard /></ProtectedRoute>} />
+              <Route path="/admin/demandes" element={<ProtectedRoute adminOnly><AdminDemandes /></ProtectedRoute>} />
+              <Route path="/admin/users" element={<ProtectedRoute adminOnly><AdminUsers /></ProtectedRoute>} />
+              <Route path="/admin/logs" element={<ProtectedRoute adminOnly><AdminLogs /></ProtectedRoute>} />
+              <Route path="/admin/create" element={<ProtectedRoute adminOnly><AdminCreate /></ProtectedRoute>} />
+            </Routes>
+          </main>
+        </AuthProvider>
+      </LanguageProvider>
     </Router>
   );
 }

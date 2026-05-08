@@ -1,11 +1,13 @@
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { useLanguage } from '../../context/LanguageContext';
 import { useState, useEffect } from 'react';
 import api from '../../api';
 import './Navbar.css';
 
 export default function Navbar() {
   const { isAuthenticated, user, logout } = useAuth();
+  const { lang, setLang, t } = useLanguage();
   const navigate = useNavigate();
   const location = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -42,6 +44,10 @@ export default function Navbar() {
     setTheme(prev => prev === 'light' ? 'dark' : 'light');
   };
 
+  const toggleLang = () => {
+    setLang(lang === 'fr' ? 'ar' : 'fr');
+  };
+
   const isAdmin = user?.role === 'admin';
 
   return (
@@ -62,44 +68,50 @@ export default function Navbar() {
         </Link>
 
         <nav className={`navbar-nav ${menuOpen ? 'open' : ''}`}>
-          <Link to="/" className={`nav-link ${location.pathname === '/' ? 'active' : ''}`} onClick={() => setMenuOpen(false)}>Accueil</Link>
-          <Link to="/services" className={`nav-link ${location.pathname === '/services' ? 'active' : ''}`} onClick={() => setMenuOpen(false)}>Démarches</Link>
+          <Link to="/" className={`nav-link ${location.pathname === '/' ? 'active' : ''}`} onClick={() => setMenuOpen(false)}>{t('الرئيسية', 'Accueil')}</Link>
+          <Link to="/services" className={`nav-link ${location.pathname === '/services' ? 'active' : ''}`} onClick={() => setMenuOpen(false)}>{t('الخدمات', 'Démarches')}</Link>
           {isAuthenticated ? (
             <>
               {isAdmin ? (
                 <>
                   <Link to="/admin" className={`nav-link ${location.pathname.startsWith('/admin') ? 'active' : ''}`} onClick={() => setMenuOpen(false)}>
-                    ⚙️ Panel Admin
+                    ⚙️ {t('لوحة التحكم', 'Panel Admin')}
                   </Link>
                 </>
               ) : (
                 <>
-                  <Link to="/dashboard" className={`nav-link ${location.pathname === '/dashboard' ? 'active' : ''}`} onClick={() => setMenuOpen(false)}>Tableau de bord</Link>
-                  <Link to="/demandes" className={`nav-link ${location.pathname.startsWith('/demandes') ? 'active' : ''}`} onClick={() => setMenuOpen(false)}>Mes demandes</Link>
+                  <Link to="/dashboard" className={`nav-link ${location.pathname === '/dashboard' ? 'active' : ''}`} onClick={() => setMenuOpen(false)}>{t('لوحة القيادة', 'Tableau de bord')}</Link>
+                  <Link to="/demandes" className={`nav-link ${location.pathname.startsWith('/demandes') ? 'active' : ''}`} onClick={() => setMenuOpen(false)}>{t('طلباتي', 'Mes demandes')}</Link>
                 </>
               )}
               <Link to="/notifications" className="nav-link nav-link-icon" onClick={() => setMenuOpen(false)}>
                 🔔
                 {unreadCount > 0 && <span className="notif-badge">{unreadCount}</span>}
               </Link>
-              <button className="theme-toggle" onClick={toggleTheme} title={theme === 'light' ? 'Mode sombre' : 'Mode clair'}>
+              <button className="theme-toggle" onClick={toggleTheme} title={t('الوضع الليلي', 'Mode sombre')}>
                 {theme === 'light' ? '🌙' : '☀️'}
+              </button>
+              <button className="lang-toggle" onClick={toggleLang} title={lang === 'fr' ? 'العربية' : 'Français'}>
+                {lang === 'fr' ? '🇲🇦' : '🇫🇷'}
               </button>
               <div className="nav-user">
                 <Link to="/profile" className="nav-user-name" onClick={() => setMenuOpen(false)}>
                   👤 {user?.name}
                 </Link>
-                <button onClick={handleLogout} className="btn btn-sm btn-secondary">Déconnexion</button>
+                <button onClick={handleLogout} className="btn btn-sm btn-secondary">{t('خروج', 'Déconnexion')}</button>
               </div>
             </>
           ) : (
             <>
-              <button className="theme-toggle" onClick={toggleTheme} title={theme === 'light' ? 'Mode sombre' : 'Mode clair'}>
+              <button className="theme-toggle" onClick={toggleTheme} title={t('الوضع الليلي', 'Mode sombre')}>
                 {theme === 'light' ? '🌙' : '☀️'}
               </button>
+              <button className="lang-toggle" onClick={toggleLang} title={lang === 'fr' ? 'العربية' : 'Français'}>
+                {lang === 'fr' ? '🇲🇦' : '🇫🇷'}
+              </button>
               <div className="nav-auth">
-                <Link to="/login" className="btn btn-sm btn-secondary" onClick={() => setMenuOpen(false)}>Connexion</Link>
-                <Link to="/register" className="btn btn-sm btn-primary" onClick={() => setMenuOpen(false)}>Inscription</Link>
+                <Link to="/login" className="btn btn-sm btn-secondary" onClick={() => setMenuOpen(false)}>{t('تسجيل الدخول', 'Connexion')}</Link>
+                <Link to="/register" className="btn btn-sm btn-primary" onClick={() => setMenuOpen(false)}>{t('إنشاء حساب', 'Inscription')}</Link>
               </div>
             </>
           )}

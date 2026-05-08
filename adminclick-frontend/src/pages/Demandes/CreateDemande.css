@@ -130,6 +130,17 @@
   font-weight: 700;
 }
 
+.service-adminclick-badge {
+  margin-top: 6px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #0f4c81, #29a7e1);
+  color: #fff;
+  padding: 3px 8px;
+  border-radius: 20px;
+  letter-spacing: 0.5px;
+}
+
 /* File Upload */
 .file-upload-zone {
   position: relative;
