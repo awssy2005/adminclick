@@ -1,10 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import api from '../../api';
+import { useLanguage } from '../../context/LanguageContext';
+import TrackingTimeline from '../../components/TrackingTimeline/TrackingTimeline';
 import './DemandeDetail.css';
 
 export default function DemandeDetail() {
   const { id } = useParams();
+  const { t } = useLanguage();
   const [demande, setDemande] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -77,6 +80,11 @@ export default function DemandeDetail() {
               </div>
             </div>
           </div>
+        </div>
+
+        {/* ── Tracking Timeline ── */}
+        <div className="animate-fade-in-up" style={{ animationDelay: '0.15s', marginBottom: 'var(--space-xl, 2rem)' }}>
+          <TrackingTimeline demandeId={demande.id} />
         </div>
 
         <div className="detail-grid">

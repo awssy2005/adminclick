@@ -24,6 +24,10 @@ class User extends Authenticatable implements MustVerifyEmail
         'email',
         'password',
         'role',
+        'notif_email',
+        'notif_sms',
+        'notif_whatsapp',
+        'phone',
     ];
 
     /**

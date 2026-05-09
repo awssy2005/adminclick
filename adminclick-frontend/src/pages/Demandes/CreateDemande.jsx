@@ -4,6 +4,7 @@ import api from '../../api';
 import AdminClickWizard from './AdminClickWizard';
 import { useLanguage } from '../../context/LanguageContext';
 import './CreateDemande.css';
+import DiagnosticAssistant from '../../components/Diagnostic/DiagnosticAssistant';
 
 export default function CreateDemande() {
   const [type, setType] = useState('');
@@ -13,6 +14,7 @@ export default function CreateDemande() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [showAssistant, setShowAssistant] = useState(false);
   const navigate = useNavigate();
   const { lang, t } = useLanguage();
 
@@ -91,7 +93,22 @@ export default function CreateDemande() {
         <div className="create-header animate-fade-in-up">
           <h1 className="create-title">📝 {t('طلب جديد', 'Nouvelle demande')}</h1>
           <p className="create-subtitle">{t('اختر نوع الوثيقة واملأ الاستمارة', 'Sélectionnez le type de document et remplissez le formulaire')}</p>
+          <div className="create-helper-banner animate-fade-in-up" style={{ animationDelay: '0.05s' }}>
+            <div className="helper-text">
+              <span className="helper-icon">💡</span>
+              <span>{t('لديك حالة خاصة أو مشكلة؟', 'Vous avez un cas complexe ou un problème ?')}</span>
+            </div>
+            <button 
+              type="button" 
+              className="btn btn-secondary btn-sm"
+              onClick={() => setShowAssistant(true)}
+            >
+              {t('مساعد التشخيص الذكي', 'Assistant de diagnostic intelligent')}
+            </button>
+          </div>
         </div>
+
+        {showAssistant && <DiagnosticAssistant onClose={() => setShowAssistant(false)} />}
 
         {success && (
           <div className="create-success animate-fade-in-up">

@@ -1,0 +1,181 @@
+/* ── NotificationBell ── */
+.nbell-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+/* Bell button */
+.nbell-btn {
+  position: relative;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 6px 8px;
+  border-radius: 12px;
+  transition: background 0.2s;
+  font-size: 1.25rem;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.nbell-btn:hover,
+.nbell-btn.active { background: var(--primary-50, #eef2ff); }
+
+.nbell-icon { display: block; }
+
+/* Badge */
+.nbell-badge {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  background: #ef4444;
+  color: #fff;
+  font-size: 0.65rem;
+  font-weight: 800;
+  min-width: 18px;
+  height: 18px;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+  border: 2px solid var(--bg-nav, #fff);
+  animation: nbell-pop 0.3s cubic-bezier(0.34,1.56,0.64,1);
+}
+@keyframes nbell-pop {
+  from { transform: scale(0); }
+  to   { transform: scale(1); }
+}
+
+/* Dropdown panel */
+.nbell-panel {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  width: 360px;
+  background: var(--bg-card, #fff);
+  border: 1px solid var(--border-light, #e2e8f0);
+  border-radius: 20px;
+  box-shadow: 0 20px 50px -8px rgba(0,0,0,0.18);
+  overflow: hidden;
+  z-index: 9000;
+  display: flex;
+  flex-direction: column;
+}
+
+[dir="rtl"] .nbell-panel { right: auto; left: 0; }
+
+.nbell-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border-light, #f1f5f9);
+}
+.nbell-header h4 { margin: 0; font-size: 1rem; font-weight: 700; }
+
+.nbell-mark-all {
+  background: none;
+  border: none;
+  color: var(--primary-600, #4f46e5);
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+  white-space: nowrap;
+}
+.nbell-mark-all:hover { text-decoration: underline; }
+
+/* List */
+.nbell-list {
+  max-height: 380px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+
+.nbell-loading,
+.nbell-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 2.5rem 1rem;
+  color: var(--text-muted, #94a3b8);
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+.nbell-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 18px;
+  border-bottom: 1px solid var(--border-light, #f8fafc);
+  cursor: pointer;
+  transition: background 0.15s;
+  position: relative;
+}
+.nbell-item:hover { background: var(--gray-50, #f8fafc); }
+.nbell-item.unread { background: #fefce8; }
+.nbell-item.unread:hover { background: #fef9c3; }
+
+.nbell-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #f59e0b;
+  flex-shrink: 0;
+  margin-top: 5px;
+}
+
+.nbell-content { flex: 1; min-width: 0; }
+.nbell-title   { font-size: 0.85rem; font-weight: 700; color: var(--text-primary, #0f172a); margin: 0 0 2px; }
+.nbell-msg     { font-size: 0.8rem; color: var(--text-secondary, #64748b); margin: 0 0 4px; line-height: 1.4; }
+.nbell-date    { font-size: 0.72rem; color: var(--text-muted, #94a3b8); }
+
+/* Footer */
+.nbell-footer {
+  padding: 10px 18px;
+  border-top: 1px solid var(--border-light, #f1f5f9);
+  text-align: center;
+}
+.nbell-footer a {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--primary-600, #4f46e5);
+  text-decoration: none;
+}
+.nbell-footer a:hover { text-decoration: underline; }
+
+/* Spinner */
+.nbell-spinner {
+  display: inline-block;
+  width: 22px; height: 22px;
+  border: 2.5px solid var(--border-medium, #cbd5e1);
+  border-top-color: var(--primary-500, #6366f1);
+  border-radius: 50%;
+  animation: nbell-spin 0.6s linear infinite;
+}
+@keyframes nbell-spin { to { transform: rotate(360deg); } }
+
+/* Animation */
+.animate-scale-up {
+  animation: scaleUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  transform-origin: top right;
+}
+[dir="rtl"] .animate-scale-up { transform-origin: top left; }
+@keyframes scaleUp {
+  from { opacity: 0; transform: scale(0.92) translateY(-6px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* Mobile */
+@media (max-width: 480px) {
+  .nbell-panel {
+    width: calc(100vw - 2rem);
+    right: -1rem;
+  }
+}

@@ -4,6 +4,7 @@ import { useLanguage } from '../../context/LanguageContext';
 import { useState, useEffect } from 'react';
 import api from '../../api';
 import './Navbar.css';
+import NotificationBell from '../NotificationBell/NotificationBell';
 
 export default function Navbar() {
   const { isAuthenticated, user, logout } = useAuth();
@@ -81,13 +82,11 @@ export default function Navbar() {
               ) : (
                 <>
                   <Link to="/dashboard" className={`nav-link ${location.pathname === '/dashboard' ? 'active' : ''}`} onClick={() => setMenuOpen(false)}>{t('لوحة القيادة', 'Tableau de bord')}</Link>
-                  <Link to="/demandes" className={`nav-link ${location.pathname.startsWith('/demandes') ? 'active' : ''}`} onClick={() => setMenuOpen(false)}>{t('طلباتي', 'Mes demandes')}</Link>
+                  <Link to="/demandes"  className={`nav-link ${location.pathname.startsWith('/demandes') ? 'active' : ''}`} onClick={() => setMenuOpen(false)}>{t('طلباتي', 'Mes demandes')}</Link>
+                  <Link to="/vault"     className={`nav-link ${location.pathname === '/vault' ? 'active' : ''}`} onClick={() => setMenuOpen(false)}>🗄️ {t('الخزينة', 'Coffre-fort')}</Link>
                 </>
               )}
-              <Link to="/notifications" className="nav-link nav-link-icon" onClick={() => setMenuOpen(false)}>
-                🔔
-                {unreadCount > 0 && <span className="notif-badge">{unreadCount}</span>}
-              </Link>
+              <NotificationBell />
               <button className="theme-toggle" onClick={toggleTheme} title={t('الوضع الليلي', 'Mode sombre')}>
                 {theme === 'light' ? '🌙' : '☀️'}
               </button>

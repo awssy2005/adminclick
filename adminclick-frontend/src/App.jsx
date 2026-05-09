@@ -18,6 +18,7 @@ import AdminDemandes from './pages/Admin/AdminDemandes';
 import AdminUsers from './pages/Admin/AdminUsers';
 import AdminLogs from './pages/Admin/AdminLogs';
 import AdminCreate from './pages/Admin/AdminCreate'; 
+import DocumentVault from './pages/Vault/DocumentVault';
 import './index.css';
 
 export default function App() {
@@ -41,6 +42,7 @@ export default function App() {
               <Route path="/demandes/:id" element={<ProtectedRoute><DemandeDetail /></ProtectedRoute>} />
               <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
               <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+              <Route path="/vault"   element={<ProtectedRoute><DocumentVault /></ProtectedRoute>} />
 
               {/* CIN Process */}
               <Route path="/cin" element={<ProtectedRoute><CINProcess /></ProtectedRoute>} />

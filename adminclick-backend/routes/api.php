@@ -10,10 +10,20 @@ use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\AppointmentController;
 use App\Http\Controllers\Api\PdfController;
 use App\Http\Controllers\Api\PasswordResetController;
+use App\Http\Controllers\DiagnosticController;
+use App\Http\Controllers\CnieController;
+use App\Http\Controllers\DocumentController;
+use App\Http\Controllers\Api\TrackingController;
+use App\Http\Controllers\Api\NotificationPreferencesController;
 
 // ========================================
 // Routes publiques
 // ========================================
+
+Route::post('/diagnostic', [DiagnosticController::class, 'store']);
+
+// === Coffre-fort — lien de partage public (sans auth) ===
+Route::get('/documents/shared/{token}', [DocumentController::class, 'downloadShared']);
 
 // Auth (avec rate limiting)
 Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:5,1');
@@ -34,6 +44,16 @@ Route::middleware('auth:sanctum')->group(function () {
     // === Auth ===
     Route::get('/me', [AuthController::class, 'me']);
     Route::post('/logout', [AuthController::class, 'logout']);
+
+    // === Coffre-fort numérique ===
+    Route::post('/documents/upload', [DocumentController::class, 'upload']);
+    Route::get('/documents', [DocumentController::class, 'index']);
+    Route::get('/documents/{id}/download', [DocumentController::class, 'download']);
+    Route::delete('/documents/{id}', [DocumentController::class, 'destroy']);
+    Route::post('/documents/{id}/share', [DocumentController::class, 'share']);
+
+    // === CNIE – Pré-remplissage intelligent ===
+    Route::post('/cnie/fetch', [CnieController::class, 'fetch']);
 
     // === Vérification d'email ===
     Route::post('/email/verification-notification', function (Request $request) {
@@ -77,6 +97,13 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/notifications/{id}/read', [NotificationController::class, 'markAsRead']);
     Route::put('/notifications/read-all', [NotificationController::class, 'markAllAsRead']);
 
+    // === Préférences de notification ===
+    Route::get('/user/notification-preferences', [NotificationPreferencesController::class, 'show']);
+    Route::put('/user/notification-preferences', [NotificationPreferencesController::class, 'update']);
+
+    // === Suivi de commande (lecture par le propriétaire) ===
+    Route::get('/demandes/{id}/tracking', [TrackingController::class, 'index']);
+
     // ========================================
     // Routes Admin
     // ========================================
@@ -90,5 +117,8 @@ Route::middleware('auth:sanctum')->group(function () {
         
         // create-admin 
         Route::post('/create-admin', [AdminController::class, 'createAdmin']);
+
+        // === Suivi de commande (ajout d'événement par admin) ===
+        Route::post('/demandes/{id}/tracking', [TrackingController::class, 'store']);
     });
 });

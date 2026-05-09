@@ -1,0 +1,401 @@
+/* ══════════════════════════════════════════════
+   DocumentVault — Coffre-fort numérique
+   AdminClick
+══════════════════════════════════════════════ */
+
+.vault-page {
+  padding-top: calc(var(--header-height, 70px) + var(--space-xl, 2rem));
+  padding-bottom: var(--space-3xl, 5rem);
+  min-height: 100vh;
+}
+
+/* ── Header ── */
+.vault-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 2rem;
+}
+
+.vault-title {
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: var(--text-primary, #0f172a);
+  margin: 0 0 0.25rem;
+}
+
+.vault-subtitle {
+  color: var(--text-secondary, #64748b);
+  font-size: 0.95rem;
+  margin: 0;
+}
+
+/* ── Upload zone ── */
+.vault-upload-zone {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.vault-type-select {
+  padding: 0.55rem 0.9rem;
+  border: 1.5px solid var(--border-medium, #cbd5e1);
+  border-radius: 10px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  background: var(--bg-card, #fff);
+  color: var(--text-primary, #0f172a);
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.vault-type-select:focus { border-color: var(--primary-500, #6366f1); }
+
+/* ── Feedback messages ── */
+.vault-msg {
+  padding: 12px 18px;
+  border-radius: 12px;
+  font-weight: 600;
+  margin-bottom: 1.25rem;
+  font-size: 0.9rem;
+}
+.vault-msg-ok  { background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; }
+.vault-msg-err { background: #fff1f2; color: #be123c; border: 1px solid #fecdd3; }
+
+/* ── Filter bar ── */
+.vault-filter-bar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1.75rem;
+}
+
+.vault-filter-label {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-secondary, #64748b);
+  margin-inline-end: 0.25rem;
+}
+
+.vault-filter-chip {
+  padding: 0.35rem 0.85rem;
+  border: 1.5px solid var(--border-light, #e2e8f0);
+  border-radius: 50px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  background: var(--bg-card, #fff);
+  color: var(--text-secondary, #64748b);
+  transition: all 0.2s;
+}
+.vault-filter-chip:hover,
+.vault-filter-chip.active {
+  background: var(--primary-600, #4f46e5);
+  color: #fff;
+  border-color: var(--primary-600, #4f46e5);
+}
+
+/* ── Loading ── */
+.vault-loading {
+  display: flex;
+  justify-content: center;
+  padding: 4rem;
+}
+
+/* ── Empty state ── */
+.vault-empty {
+  text-align: center;
+  padding: 4rem 2rem;
+  background: var(--bg-card, #fff);
+  border: 2px dashed var(--border-light, #e2e8f0);
+  border-radius: 20px;
+}
+.vault-empty-icon { font-size: 3.5rem; margin-bottom: 1rem; }
+.vault-empty p    { color: var(--text-secondary, #64748b); margin: 0.25rem 0; }
+.vault-empty-hint { font-size: 0.875rem; color: var(--text-muted, #94a3b8); }
+
+/* ── Grid ── */
+.vault-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.25rem;
+}
+
+/* ── Card ── */
+.vault-card {
+  background: var(--bg-card, #fff);
+  border: 1.5px solid var(--border-light, #e2e8f0);
+  border-radius: 18px;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+.vault-card:hover {
+  border-color: var(--primary-300, #a5b4fc);
+  box-shadow: 0 8px 24px rgba(99, 102, 241, 0.1);
+  transform: translateY(-3px);
+}
+
+.vault-card-top {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.vault-doc-icon {
+  font-size: 2rem;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.vault-doc-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.vault-doc-name {
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: var(--text-primary, #0f172a);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.vault-doc-type {
+  font-size: 0.75rem;
+  color: var(--primary-600, #4f46e5);
+  font-weight: 600;
+  background: var(--primary-50, #eef2ff);
+  padding: 2px 8px;
+  border-radius: 20px;
+  display: inline-block;
+}
+
+.vault-share-badge {
+  font-size: 1rem;
+  flex-shrink: 0;
+  opacity: 0.7;
+}
+
+.vault-card-meta {
+  display: flex;
+  gap: 1rem;
+  font-size: 0.78rem;
+  color: var(--text-muted, #94a3b8);
+}
+
+/* ── Card Actions ── */
+.vault-card-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  border-top: 1px solid var(--border-light, #f1f5f9);
+  padding-top: 0.75rem;
+}
+
+.vault-action-btn {
+  flex: 1;
+  padding: 0.45rem 0.6rem;
+  border: none;
+  border-radius: 9px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+  text-align: center;
+}
+
+.vault-btn-download {
+  background: var(--primary-50, #eef2ff);
+  color: var(--primary-700, #4338ca);
+}
+.vault-btn-download:hover { background: var(--primary-100, #e0e7ff); }
+
+.vault-btn-share {
+  background: #f0fdf4;
+  color: #15803d;
+}
+.vault-btn-share:hover { background: #dcfce7; }
+
+.vault-btn-delete {
+  background: #fff1f2;
+  color: #be123c;
+  flex: 0 0 auto;
+  padding: 0.45rem 0.7rem;
+}
+.vault-btn-delete:hover { background: #ffe4e6; }
+
+/* ── Overlay / Popup ── */
+.vault-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 40, 84, 0.4);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9998;
+  padding: 1rem;
+}
+
+.vault-popup {
+  background: var(--bg-card, #fff);
+  border-radius: 24px;
+  padding: 2.5rem 2rem;
+  width: 100%;
+  max-width: 480px;
+  box-shadow: 0 25px 60px rgba(0,0,0,0.2);
+  position: relative;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.vault-popup-close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: var(--gray-100, #f1f5f9);
+  border: none;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  font-size: 1.25rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+}
+.vault-popup-close:hover { background: var(--gray-200, #e2e8f0); }
+
+.vault-popup-icon { font-size: 3rem; }
+
+.vault-popup h3 {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--text-primary, #0f172a);
+  margin: 0;
+}
+
+.vault-popup-hint {
+  font-size: 0.85rem;
+  color: var(--text-muted, #94a3b8);
+  margin: 0;
+}
+
+/* Share URL row */
+.vault-share-url {
+  display: flex;
+  width: 100%;
+  gap: 0.5rem;
+}
+.vault-share-url input {
+  flex: 1;
+  padding: 0.6rem 0.9rem;
+  border: 1.5px solid var(--border-medium, #cbd5e1);
+  border-radius: 10px;
+  font-size: 0.8rem;
+  background: var(--gray-50, #f8fafc);
+  color: var(--text-primary, #0f172a);
+  min-width: 0;
+  cursor: text;
+}
+.vault-copy-btn {
+  padding: 0.6rem 0.85rem;
+  background: var(--primary-600, #4f46e5);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.2s;
+  flex-shrink: 0;
+}
+.vault-copy-btn:hover { background: var(--primary-700, #4338ca); }
+
+.vault-copied-msg {
+  font-size: 0.85rem;
+  color: #15803d;
+  font-weight: 700;
+  margin: 0;
+}
+
+/* Delete popup */
+.vault-popup-delete h3 { color: #be123c; }
+
+.vault-popup-actions {
+  display: flex;
+  gap: 0.75rem;
+  width: 100%;
+}
+.vault-popup-actions .btn { flex: 1; }
+
+.btn-danger {
+  background: #dc2626;
+  color: #fff;
+  border: none;
+  padding: 0.65rem 1.25rem;
+  border-radius: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+.btn-danger:hover:not(:disabled) { background: #b91c1c; }
+.btn-danger:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* ── Spinner ── */
+.vault-spinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: vault-spin 0.65s linear infinite;
+  vertical-align: middle;
+}
+
+@keyframes vault-spin { to { transform: rotate(360deg); } }
+
+/* ── Animations ── */
+.animate-scale-up {
+  animation: scaleUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes scaleUp {
+  from { opacity: 0; transform: scale(0.93) translateY(10px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* ── RTL ── */
+[dir="rtl"] .vault-popup-close { right: auto; left: 1rem; }
+[dir="rtl"] .vault-header      { flex-direction: row-reverse; }
+
+/* ── Responsive ── */
+@media (max-width: 640px) {
+  .vault-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .vault-upload-zone { flex-direction: column; }
+  .vault-type-select { width: 100%; }
+  .vault-grid { grid-template-columns: 1fr; }
+}

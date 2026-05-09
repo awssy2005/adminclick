@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../api';
+import NotificationPreferences from '../../components/NotificationPreferences/NotificationPreferences';
 import './Profile.css';
 
 export default function Profile() {
@@ -107,6 +108,11 @@ export default function Profile() {
               </form>
             </div>
           </div>
+        </div>
+
+        {/* Notification Preferences */}
+        <div className="animate-fade-in-up" style={{ animationDelay: '0.25s' }}>
+          <NotificationPreferences />
         </div>
 
         {/* Danger Zone */}

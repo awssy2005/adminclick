@@ -181,6 +181,10 @@ export default function Dashboard() {
               <span className="quick-icon">👤</span>
               <span className="quick-label">Mon profil</span>
             </Link>
+            <Link to="/vault" className="quick-card" style={{ borderColor: 'rgba(99,102,241,0.3)', background: 'rgba(99,102,241,0.03)' }}>
+              <span className="quick-icon">🗄️</span>
+              <span className="quick-label">Coffre-fort</span>
+            </Link>
             <Link to="/services" className="quick-card">
               <span className="quick-icon">🏛️</span>
               <span className="quick-label">Services</span>
