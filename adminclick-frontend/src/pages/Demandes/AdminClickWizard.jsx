@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useLanguage } from '../../context/LanguageContext';
+import api from '../../api';
 import './AdminClickWizard.css';
 
 const STEPS = ['accueil', 'titulaire', 'demandeur', 'livraison', 'recapitulatif', 'paiement', 'confirmation'];
@@ -21,6 +22,10 @@ const ERRORS = {
   adresse: { ar: 'يرجى إدخال العنوان الكامل', fr: 'Veuillez saisir l\'adresse complète' },
   tel:     { ar: 'رقم الهاتف غير صالح (مثال: 0612345678)', fr: 'Numéro invalide (ex: 0612345678 ou +212...)' },
   email:   { ar: 'البريد الإلكتروني غير صالح', fr: 'Adresse e-mail invalide' },
+  numActe: { ar: 'رقم الحالة المدنية مطلوب', fr: 'Le numéro d\'acte est requis' },
+  anneeActe: { ar: 'سنة الحالة المدنية مطلوبة', fr: 'L\'année de l\'acte est requise' },
+  region:  { ar: 'يرجى اختيار الجهة', fr: 'Veuillez choisir la région' },
+  province: { ar: 'يرجى اختيار الإقليم', fr: 'Veuillez choisir la province' },
   carte:   { ar: 'رقم البطاقة يجب أن يكون 16 رقمًا', fr: 'Le numéro de carte doit comporter 16 chiffres' },
   expiry:  { ar: 'تاريخ الانتهاء غير صالح (مثال: 12/27)', fr: 'Date d\'expiration invalide (ex: 12/27)' },
   cvv:     { ar: 'رمز CVV يجب أن يكون 3 أرقام', fr: 'Le CVV doit comporter 3 chiffres' },
@@ -87,6 +92,8 @@ export default function AdminClickWizard({ onCancel }) {
   const [dateNaissance, setDateNaissance] = useState('');
   const [lieuNaissance, setLieuNaissance] = useState('');
   const [cnie, setCnie] = useState('');
+  const [numeroActe, setNumeroActe] = useState('');
+  const [anneeActe, setAnneeActe] = useState('');
 
   // ── Demandeur ──
   const [lienParente, setLienParente] = useState('');
@@ -95,6 +102,58 @@ export default function AdminClickWizard({ onCancel }) {
   const [adresse, setAdresse] = useState('');
   const [telephone, setTelephone] = useState('');
   const [email, setEmail] = useState('');
+
+  // ── CNIE prefill ──
+  const [cnieLoading, setCnieLoading]   = useState(false);
+  const [cniePrefilled, setCniePrefilled] = useState(false);
+  const [cnieError, setCnieError]       = useState('');
+
+  // ── Commune API autocomplete & Hierarchy ──
+  const [regions, setRegions] = useState([]);
+  const [provinces, setProvinces] = useState([]);
+  const [communes, setCommunes] = useState([]);
+  const [selectedRegion, setSelectedRegion] = useState('');
+  const [selectedProvince, setSelectedProvince] = useState('');
+  const [selectedCommuneId, setSelectedCommuneId] = useState('');
+
+  const [villeSuggestions, setVilleSuggestions] = useState([]);
+  const [villeLoading, setVilleLoading]         = useState(false);
+  const [selectedCommune, setSelectedCommune]   = useState(null); // full commune object
+  const [bec, setBec]                           = useState(''); // Bureau d'Etat Civil / Moqata'a
+  const [becSuggestions, setBecSuggestions]     = useState([]);
+  const [deliveryAgency, setDeliveryAgency]     = useState('');
+
+  const villeRef     = useRef(null);
+  const debounceRef  = useRef(null);
+
+  // Load Regions on mount
+  useEffect(() => {
+    api.get('/regions').then(res => setRegions(res.data));
+  }, []);
+
+  // Load Provinces when region changes
+  useEffect(() => {
+    if (selectedRegion) {
+      api.get(`/provinces/${selectedRegion}`).then(res => {
+        setProvinces(res.data);
+        setCommunes([]);
+        setSelectedProvince('');
+        setSelectedCommuneId('');
+      });
+    }
+  }, [selectedRegion]);
+
+  // Load Communes when province changes
+  useEffect(() => {
+    if (selectedProvince) {
+      api.get(`/communes/${selectedProvince}`).then(res => setCommunes(res.data));
+    }
+  }, [selectedProvince]);
+
+  // ── Submit state ──
+  const [submitLoading, setSubmitLoading] = useState(false);
+  const [submitError, setSubmitError]     = useState('');
+  const [realOrderId, setRealOrderId]    = useState(null);
 
   // ── Paiement simulé ──
   const [carte, setCarte] = useState('');
@@ -128,6 +187,10 @@ export default function AdminClickWizard({ onCancel }) {
     date:    !isValidDate(dateNaissance) ? ERRORS.date : null,
     lieu:    lieuNaissance.trim().length < 2 ? ERRORS.lieu : null,
     cnie:    !isValidCnie(cnie)  ? ERRORS.cnie    : null,
+    numActe: !numeroActe ? ERRORS.numActe : null,
+    anneeActe: !anneeActe || anneeActe.length < 4 ? ERRORS.anneeActe : null,
+    region:  !selectedRegion ? ERRORS.region : null,
+    province: !selectedProvince ? ERRORS.province : null,
     lien:    !lienParente        ? ERRORS.lien    : null,
     nomDem:  nomDemandeur.trim().length < 3 ? ERRORS.nomDem : null,
     adresse: adresse.trim().length < 5 ? ERRORS.adresse : null,
@@ -138,7 +201,7 @@ export default function AdminClickWizard({ onCancel }) {
     cvv:     !/^\d{3}$/.test(cvv)    ? ERRORS.cvv : null,
   };
 
-  const step1Valid = !errs.nomAr && !errs.nomFr && !errs.date && !errs.lieu && !errs.cnie;
+  const step1Valid = !errs.nomAr && !errs.nomFr && !errs.date && !errs.numActe && !errs.anneeActe && !errs.region && !errs.province && (selectedCommuneId ? !!bec : true);
   const step2Valid = !errs.lien && !errs.nomDem && !errs.adresse && !errs.tel && !errs.email
     && (lienParente !== 'autre' || autreParente.trim().length > 0);
   const payValid   = !errs.carte && !errs.expiry && !errs.cvv;
@@ -152,12 +215,99 @@ export default function AdminClickWizard({ onCancel }) {
     if (step2Valid) setStep('livraison');
   };
 
-  const handlePay = (e) => {
+  // ── CNIE fetch from real API ──
+  const handleCnieFetch = async () => {
+    if (!cnie.trim()) return;
+    setCnieLoading(true); setCnieError('');
+    try {
+      const res = await api.post('/cnie/fetch', { cnie: cnie.trim().toUpperCase() });
+      const d = res.data;
+      setNomAr(`${d.prenom_ar} ${d.nom_ar}`.trim());
+      setNomFr(`${d.prenom_fr} ${d.nom_fr}`.trim());
+      if (d.date_naissance) setDateNaissance(d.date_naissance);
+      if (d.lieu_naissance) setLieuNaissance(d.lieu_naissance);
+      setCniePrefilled(true);
+      setTouched(t => ({ ...t, nomAr:true, nomFr:true, date:true, lieu:true }));
+    } catch (err) {
+      const body = err.response?.data;
+      setCnieError(lang === 'ar' ? (body?.ar || 'خطأ في الاتصال') : (body?.fr || 'Erreur de connexion'));
+    } finally {
+      setCnieLoading(false);
+    }
+  };
+
+  // ── City autocomplete → real API call with 400ms debounce ──
+  const handleVilleChange = (val) => {
+    setLieuNaissance(val);
+    setSelectedCommune(null);
+    clearTimeout(debounceRef.current);
+
+    if (val.trim().length < 2) {
+      setVilleSuggestions([]);
+      return;
+    }
+
+    setVilleLoading(true);
+    debounceRef.current = setTimeout(async () => {
+      try {
+        const res = await api.get('/communes', { params: { q: val } });
+        setVilleSuggestions(res.data ?? []);
+      } catch {
+        setVilleSuggestions([]);
+      } finally {
+        setVilleLoading(false);
+      }
+    }, 400);
+  };
+
+  const selectCommune = (commune) => {
+    setLieuNaissance(commune.display);
+    setSelectedCommune(commune);
+    setVilleSuggestions([]);
+    
+    // Générer des bureaux d'état civil probables pour cette commune
+    const names = lang === 'ar' 
+      ? ['مكتب الحالة المدنية المركزي', 'ملحقة إدارية رقم 1', 'ملحقة إدارية رقم 2', 'قيادة المنطقة']
+      : ['Bureau d\'État Civil Central', 'Annexe Administrative n°1', 'Annexe Administrative n°2', 'Caïdat'];
+    
+    const suggested = names.map((name, i) => ({
+      id: i,
+      name: `${name} - ${commune.nom}`
+    }));
+    setBecSuggestions(suggested);
+    setBec(''); // Reset BEC selection
+    touch('lieu');
+  };
+
+  const handlePay = async (e) => {
     e.preventDefault();
     setTouched(t => ({ ...t, carte:true, expiry:true, cvv:true }));
     if (!payValid) return;
-    setPayLoading(true);
-    setTimeout(() => { setPayLoading(false); setStep('confirmation'); }, 2500);
+    setPayLoading(true); setSubmitError('');
+    try {
+      // Simulate payment delay then submit to real API
+      await new Promise(r => setTimeout(r, 1800));
+      const res = await api.post('/demandes', {
+        type: 'acte_naissance',
+        description: [
+          `N° Acte: ${numeroActe} / Année: ${anneeActe}`,
+          `Titulaire: ${nomFr} / ${nomAr}`,
+          `Né(e) le: ${dateNaissance}`,
+          `Lieu: ${lieuNaissance} (Region ID: ${selectedRegion}, Prov ID: ${selectedProvince})`,
+          `Bureau BEC: ${bec}`,
+          `CNIE: ${cnie || 'N/A'}`,
+          `Demandeur: ${nomDemandeur} (${getLienLabel()})`,
+          `Tél: ${telephone} | Email: ${email}`,
+          `Livraison: Barid Al-Maghrib — 30 DH | Agence: ${deliveryAgency}`,
+        ].join(' | '),
+      });
+      setRealOrderId(res.data.id);
+      setStep('confirmation');
+    } catch {
+      setSubmitError(t('حدث خطأ أثناء الإرسال. حاول مجدداً.', 'Erreur lors de la soumission. Veuillez réessayer.'));
+    } finally {
+      setPayLoading(false);
+    }
   };
 
   // Format helpers
@@ -232,8 +382,35 @@ export default function AdminClickWizard({ onCancel }) {
             <div className="wq-step-header">
               <span className="wq-step-badge">1/5</span>
               <div>
-                <h2 className="wq-ar">معلومات المولود</h2>
-                <h3 className="wq-fr">Informations du titulaire de l'acte</h3>
+                <h2 className="wq-ar">معلومات رسم الولادة</h2>
+                <h3 className="wq-fr">Informations de l'acte de naissance</h3>
+              </div>
+            </div>
+
+            {/* Acte Number & Year */}
+            <div className="wq-row2">
+              <div className="wq-field">
+                <label><span className="wq-ar">رقم الرسم</span> / <span className="wq-fr">N° de l'acte</span></label>
+                <input 
+                  className={`wq-input ${touched.numActe && errs.numActe ? 'wq-input-err' : numeroActe ? 'wq-input-ok' : ''}`}
+                  placeholder="Ex: 1234"
+                  value={numeroActe}
+                  onChange={e => setNumeroActe(e.target.value.replace(/\D/g,''))}
+                  onBlur={() => touch('numActe')}
+                />
+                {touched.numActe && <ErrorMsg err={errs.numActe} />}
+              </div>
+              <div className="wq-field">
+                <label><span className="wq-ar">سنة الرسم</span> / <span className="wq-fr">Année de l'acte (Hégirienne ou Grégorienne)</span></label>
+                <input 
+                  className={`wq-input ${touched.anneeActe && errs.anneeActe ? 'wq-input-err' : anneeActe ? 'wq-input-ok' : ''}`}
+                  placeholder="Ex: 1990"
+                  maxLength={4}
+                  value={anneeActe}
+                  onChange={e => setAnneeActe(e.target.value.replace(/\D/g,''))}
+                  onBlur={() => touch('anneeActe')}
+                />
+                {touched.anneeActe && <ErrorMsg err={errs.anneeActe} />}
               </div>
             </div>
 
@@ -272,19 +449,112 @@ export default function AdminClickWizard({ onCancel }) {
               {touched.date && <ErrorMsg err={errs.date} />}
             </div>
 
+            {/* Hierarchical Geography Selection */}
             <div className="wq-field">
-              <label><span className="wq-ar">مكان الازدياد</span><span className="wq-sep">/</span><span className="wq-fr">Lieu de naissance</span></label>
-              <input className={`wq-input ${touched.lieu && errs.lieu ? 'wq-input-err' : touched.lieu && !errs.lieu ? 'wq-input-ok' : ''}`} placeholder="Ex: Casablanca, Marrakech..." value={lieuNaissance} onChange={e => setLieuNaissance(e.target.value)} onBlur={() => touch('lieu')} />
-              {touched.lieu && <ErrorMsg err={errs.lieu} />}
+              <label><span className="wq-ar">الجهة</span> / <span className="wq-fr">Région de naissance</span></label>
+              <select 
+                className={`wq-input ${touched.region && errs.region ? 'wq-input-err' : selectedRegion ? 'wq-input-ok' : ''}`}
+                value={selectedRegion}
+                onChange={e => setSelectedRegion(e.target.value)}
+                onBlur={() => touch('region')}
+              >
+                <option value="">-- {t('اختر الجهة', 'Choisir la région')} --</option>
+                {regions.map(r => <option key={r.id} value={r.id}>{t(r.ar, r.fr)}</option>)}
+              </select>
             </div>
 
+            {selectedRegion && (
+              <div className="wq-field animate-wq">
+                <label><span className="wq-ar">الإقليم / العمالة</span> / <span className="wq-fr">Province / Préfecture</span></label>
+                <select 
+                  className={`wq-input ${touched.province && errs.province ? 'wq-input-err' : selectedProvince ? 'wq-input-ok' : ''}`}
+                  value={selectedProvince}
+                  onChange={e => setSelectedProvince(e.target.value)}
+                  onBlur={() => touch('province')}
+                >
+                  <option value="">-- {t('اختر الإقليم', 'Choisir la province')} --</option>
+                  {provinces.map(p => <option key={p.id} value={p.id}>{t(p.ar, p.fr)}</option>)}
+                </select>
+              </div>
+            )}
+
+            {selectedProvince && (
+              <div className="wq-field animate-wq">
+                <label><span className="wq-ar">الجماعة / الدائرة</span> / <span className="wq-fr">Commune / Arrondissement</span></label>
+                <select 
+                  className="wq-input"
+                  value={selectedCommuneId}
+                  onChange={e => {
+                    const id = e.target.value;
+                    setSelectedCommuneId(id);
+                    const c = communes.find(x => x.id == id);
+                    if (c) selectCommune({ nom: c.fr, display: `${t(c.ar, c.fr)}, ${selectedProvince}` });
+                  }}
+                >
+                  <option value="">-- {t('اختر الجماعة', 'Choisir la commune')} --</option>
+                  {communes.map(c => <option key={c.id} value={c.id}>{t(c.ar, c.fr)}</option>)}
+                </select>
+              </div>
+            )}
+
+            {/* Administration Selection (BEC / Moqata'a) */}
+            {selectedCommuneId && (
+              <div className="wq-field animate-wq" style={{marginTop: '1rem'}}>
+                <label>
+                  <span className="wq-ar">مكتب الحالة المدنية / المقاطعة</span>
+                  <span className="wq-sep">/</span>
+                  <span className="wq-fr">Bureau d'État Civil / Moqata'a</span>
+                </label>
+                <select 
+                  className={`wq-input ${touched.bec && !bec ? 'wq-input-err' : bec ? 'wq-input-ok' : ''}`}
+                  value={bec}
+                  onChange={(e) => { setBec(e.target.value); touch('bec'); }}
+                  onBlur={() => touch('bec')}
+                >
+                  <option value="">-- {t('اختر المكتب', 'Choisir le bureau')} --</option>
+                  {becSuggestions.map(s => (
+                    <option key={s.id} value={s.name}>{s.name}</option>
+                  ))}
+                  <option value="autre">{t('أخرى (أدخل يدوياً)', 'Autre (saisie manuelle)')}</option>
+                </select>
+                {bec === 'autre' && (
+                  <input 
+                    className="wq-input" 
+                    style={{marginTop: '8px'}}
+                    placeholder={t('اسم الإدارة...', 'Nom de l\'administration...')}
+                    onChange={(e) => setBec(e.target.value)}
+                  />
+                )}
+              </div>
+            )}
+
+
+            {/* CNIE prefill */}
             <div className="wq-field">
               <label>
                 <span className="wq-ar">رقم البطاقة الوطنية (CNIE)</span><span className="wq-sep">/</span>
                 <span className="wq-fr">Numéro CIN</span>
                 <span className="wq-optional"> (اختياري / facultatif)</span>
               </label>
-              <input className={`wq-input ${touched.cnie && errs.cnie && cnie ? 'wq-input-err' : touched.cnie && !errs.cnie && cnie ? 'wq-input-ok' : ''}`} placeholder="Ex: BK123456" value={cnie} onChange={e => setCnie(e.target.value.toUpperCase())} onBlur={() => touch('cnie')} />
+              <div className="wq-cnie-row">
+                <input
+                  className={`wq-input ${touched.cnie && errs.cnie && cnie ? 'wq-input-err' : cniePrefilled ? 'wq-input-ok' : ''}`}
+                  placeholder="Ex: BK123456"
+                  value={cnie}
+                  onChange={e => { setCnie(e.target.value.toUpperCase()); setCniePrefilled(false); setCnieError(''); }}
+                  onBlur={() => touch('cnie')}
+                />
+                <button
+                  type="button"
+                  className="wq-btn wq-btn-cnie"
+                  onClick={handleCnieFetch}
+                  disabled={cnieLoading || !cnie.trim()}
+                >
+                  {cnieLoading ? <span className="wq-spinner" /> : t('✦ تعبئة تلقائية', '✦ Pré-remplir')}
+                </button>
+              </div>
+              {cnieError && <div className="wq-error">{cnieError}</div>}
+              {cniePrefilled && <div className="wq-cnie-ok">✅ {t('تم تعبئة البيانات تلقائياً — يمكنك التعديل', 'Données pré-remplies — vous pouvez les modifier')}</div>}
               {touched.cnie && cnie && <ErrorMsg err={errs.cnie} />}
             </div>
 
@@ -384,6 +654,24 @@ export default function AdminClickWizard({ onCancel }) {
               <p className="wq-fr">⏳ Délai estimé: 5 à 10 jours ouvrés</p>
             </div>
 
+            <div className="wq-field animate-wq">
+              <label><span className="wq-ar">وكالة البريد / وكالة الاستلام الأقرب</span> / <span className="wq-fr">Agence Barid Al-Maghrib la plus proche</span></label>
+              <select 
+                className="wq-input"
+                value={deliveryAgency}
+                onChange={e => setDeliveryAgency(e.target.value)}
+              >
+                <option value="">-- {t('اختر الوكالة الأقرب لعنوانك', 'Choisir l\'agence la plus proche de votre adresse')} --</option>
+                <option value="Agence Centrale">Agence Centrale</option>
+                <option value="Agence Principale">Agence Principale</option>
+                <option value="Point Relais - Quartier Administratif">Point Relais - Quartier Administratif</option>
+                <option value="Bureau de Poste - Annexe">Bureau de Poste - Annexe</option>
+              </select>
+              <p className="wq-muted" style={{fontSize: '0.75rem', marginTop: '4px'}}>
+                {t('سيتم توجيه الظرف المضمون إلى هذه الوكالة في حال عدم تواجدكم بالمنزل.', 'Le courrier sera déposé dans cette agence si vous êtes absent lors du passage du facteur.')}
+              </p>
+            </div>
+
             <div className="wq-actions">
               <button className="wq-btn wq-btn-ghost" onClick={() => setStep('demandeur')}>← {t('تعديل', 'Retour')}</button>
               <button className="wq-btn wq-btn-primary" onClick={() => setStep('recapitulatif')}>
@@ -414,8 +702,12 @@ export default function AdminClickWizard({ onCancel }) {
                   <td colSpan={2}>👶 <strong>معلومات المولود / Titulaire</strong></td>
                 </tr>
                 <tr>
+                  <td>{t('رقم و سنة الرسم', 'N° et Année de l\'acte')}</td>
+                  <td>{numeroActe} / {anneeActe} <button className="wq-edit-btn" onClick={() => setStep('titulaire')}>{t('تعديل', 'Modifier')}</button></td>
+                </tr>
+                <tr>
                   <td>{t('الاسم بالعربية', 'Nom (AR)')}</td>
-                  <td>{nomAr} <button className="wq-edit-btn" onClick={() => setStep('titulaire')}>{t('تعديل', 'Modifier')}</button></td>
+                  <td>{nomAr}</td>
                 </tr>
                 <tr>
                   <td>{t('الاسم بالفرنسية', 'Nom (FR)')}</td>
@@ -429,6 +721,12 @@ export default function AdminClickWizard({ onCancel }) {
                   <td>{t('مكان الازدياد', 'Lieu de naissance')}</td>
                   <td>{lieuNaissance}</td>
                 </tr>
+                {bec && (
+                  <tr>
+                    <td>{t('مكتب الحالة المدنية', 'Bureau d\'État Civil')}</td>
+                    <td>{bec}</td>
+                  </tr>
+                )}
                 {cnie && <tr><td>{t('رقم البطاقة الوطنية', 'Numéro CIN')}</td><td>{cnie}</td></tr>}
 
                 <tr className="wq-table-section">
@@ -447,6 +745,7 @@ export default function AdminClickWizard({ onCancel }) {
                   <td colSpan={2}>✉️ <strong>{t('الإرسال', 'Livraison')}</strong></td>
                 </tr>
                 <tr><td>{t('الطريقة', 'Mode')}</td><td>{t('بريد مضمون (بريد المغرب)', 'Barid Al-Maghrib (recommandé)')}</td></tr>
+                <tr><td>{t('الوكالة', 'Agence')}</td><td>{deliveryAgency || 'Défaut'}</td></tr>
                 <tr><td>{t('الرسوم', 'Frais')}</td><td>30 DH</td></tr>
               </tbody>
             </table>
@@ -506,10 +805,11 @@ export default function AdminClickWizard({ onCancel }) {
                 </div>
               </div>
               <p className="wq-sim-notice">⚠️ {t('بيانات تجريبية فقط - محاكاة فقط', 'Données fictives — simulation uniquement')}</p>
+              {submitError && <div className="wq-error" style={{marginBottom:'1rem'}}>{submitError}</div>}
               <div className="wq-actions">
                 <button type="button" className="wq-btn wq-btn-ghost" onClick={() => setStep('recapitulatif')}>← {t('تعديل', 'Modifier')}</button>
                 <button type="submit" className="wq-btn wq-btn-pay" disabled={payLoading}>
-                  {payLoading ? <span className="wq-spinner" /> : '🔒 ' + t('تأكيد الأداء', 'Valider le paiement')}
+                  {payLoading ? <><span className="wq-spinner" /> {t('جارٍ الإرسال...', 'Envoi en cours...')}</> : '🔒 ' + t('تأكيد الأداء', 'Valider le paiement')}
                 </button>
               </div>
             </form>
@@ -525,7 +825,9 @@ export default function AdminClickWizard({ onCancel }) {
 
             <div className="wq-order-box">
               <p>{t('رقم الطلب', 'Numéro de commande')}</p>
-              <strong className="wq-order-num">{orderNumber}</strong>
+              <strong className="wq-order-num">
+                {realOrderId ? `ADM-${String(realOrderId).padStart(5,'0')}` : orderNumber}
+              </strong>
             </div>
 
             <div className="wq-info-box">

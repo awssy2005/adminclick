@@ -15,6 +15,7 @@ use App\Http\Controllers\CnieController;
 use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\Api\TrackingController;
 use App\Http\Controllers\Api\NotificationPreferencesController;
+use App\Http\Controllers\Api\CommuneController;
 
 // ========================================
 // Routes publiques
@@ -24,6 +25,12 @@ Route::post('/diagnostic', [DiagnosticController::class, 'store']);
 
 // === Coffre-fort — lien de partage public (sans auth) ===
 Route::get('/documents/shared/{token}', [DocumentController::class, 'downloadShared']);
+
+// === Communes marocaines (Données hiérarchiques) ===
+Route::get('/regions', [CommuneController::class, 'getRegions']);
+Route::get('/provinces/{regionId}', [CommuneController::class, 'getProvinces']);
+Route::get('/communes/{provinceId}', [CommuneController::class, 'getCommunes']);
+Route::get('/communes/search', [CommuneController::class, 'search']); // Garder la recherche libre Nominatim
 
 // Auth (avec rate limiting)
 Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:5,1');
