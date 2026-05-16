@@ -19,6 +19,8 @@ class DatabaseSeeder extends Seeder
             'email' => 'test@example.com',
         ]);
 
+        $this->call(RealMoroccoGeographySeeder::class);
+
         // Compte administrateur ← ajouter ce bloc
         User::factory()->create([
             'name' => 'Admin',

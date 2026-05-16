@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "efa3c3d54f7e027a112d26032cbbc7d1",
+    "content-hash": "235a42b5eebc86b3f2e4f0ebde022f59",
     "packages": [
         {
             "name": "barryvdh/laravel-dompdf",
@@ -1284,6 +1284,43 @@
                 }
             ],
             "time": "2025-08-22T14:27:06+00:00"
+        },
+        {
+            "name": "hichaminfo/macities",
+            "version": "0.2",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/hichaminfo/MaCities.git",
+                "reference": "9426b941160f7dcf785138a854ca11556f483929"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/hichaminfo/MaCities/zipball/9426b941160f7dcf785138a854ca11556f483929",
+                "reference": "9426b941160f7dcf785138a854ca11556f483929",
+                "shasum": ""
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Chamhi\\MaCities\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Hicham AIT",
+                    "email": "hicham.info.ecg@gmail.com"
+                }
+            ],
+            "description": "Full package with Moroccan cities",
+            "support": {
+                "issues": "https://github.com/hichaminfo/MaCities/issues",
+                "source": "https://github.com/hichaminfo/MaCities/tree/0.2"
+            },
+            "time": "2017-04-07T07:24:06+00:00"
         },
         {
             "name": "laravel/framework",

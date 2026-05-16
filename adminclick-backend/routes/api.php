@@ -15,7 +15,7 @@ use App\Http\Controllers\CnieController;
 use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\Api\TrackingController;
 use App\Http\Controllers\Api\NotificationPreferencesController;
-use App\Http\Controllers\Api\CommuneController;
+use App\Http\Controllers\Api\GeographieController;
 
 // ========================================
 // Routes publiques
@@ -26,11 +26,12 @@ Route::post('/diagnostic', [DiagnosticController::class, 'store']);
 // === Coffre-fort — lien de partage public (sans auth) ===
 Route::get('/documents/shared/{token}', [DocumentController::class, 'downloadShared']);
 
-// === Communes marocaines (Données hiérarchiques) ===
-Route::get('/regions', [CommuneController::class, 'getRegions']);
-Route::get('/provinces/{regionId}', [CommuneController::class, 'getProvinces']);
-Route::get('/communes/{provinceId}', [CommuneController::class, 'getCommunes']);
-Route::get('/communes/search', [CommuneController::class, 'search']); // Garder la recherche libre Nominatim
+// === Données géographiques officielles (région → ville → arrondissement → secteur) ===
+Route::get('/regions', [GeographieController::class, 'getRegions']);
+Route::get('/villes/{regionId}', [GeographieController::class, 'getVilles']);
+Route::get('/arrondissements/{villeId}', [GeographieController::class, 'getArrondissements']);
+Route::get('/secteurs/{arrondissementId}', [GeographieController::class, 'getSecteurs']);
+Route::get('/communes/search', [GeographieController::class, 'search']);
 
 // Auth (avec rate limiting)
 Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:5,1');
@@ -59,8 +60,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/documents/{id}', [DocumentController::class, 'destroy']);
     Route::post('/documents/{id}/share', [DocumentController::class, 'share']);
 
-    // === CNIE – Pré-remplissage intelligent ===
+    // === CNIE – Pré-remplissage intelligent ET vérification CIN ===
     Route::post('/cnie/fetch', [CnieController::class, 'fetch']);
+    Route::get('/cin/verify/{cin}', [CnieController::class, 'verifyCin']);
 
     // === Vérification d'email ===
     Route::post('/email/verification-notification', function (Request $request) {

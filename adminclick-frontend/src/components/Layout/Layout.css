@@ -1,0 +1,24 @@
+.app-layout {
+  display: flex;
+  min-height: 100vh;
+}
+
+.main-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0; /* pour éviter les débordements */
+}
+
+.content {
+  flex: 1;
+  padding: 24px;
+  background-color: var(--bg-light, #f5f6fa);
+  overflow-y: auto;
+}
+
+@media (min-width: 992px) {
+  .app-layout {
+    /* sidebar fixe à gauche */
+  }
+}

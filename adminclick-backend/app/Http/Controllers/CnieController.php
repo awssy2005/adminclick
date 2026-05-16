@@ -1,36 +1,18 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Api;
 
+use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use App\Models\Citoyen;
 
-class CnieController extends Controller
+class CinController extends Controller
 {
-    public function fetch(Request $request)
-    {
-        $request->validate([
-            'cnie' => ['required', 'string', 'regex:/^[A-Za-z]{1,2}\d{5,6}$/'],
-        ]);
-
-        $cnie = strtoupper(trim($request->input('cnie')));
-
-        $citoyen = Citoyen::where('cnie', $cnie)->first();
-
-        if (!$citoyen) {
-            return response()->json([
-                'fr' => 'Aucun citoyen trouvé pour ce numéro de CNIE. Veuillez vérifier le numéro ou remplir les champs manuellement.',
-                'ar' => 'لم يتم العثور على أي مواطن بهذا الرقم. يرجى التحقق من الرقم أو ملء الحقول يدويًا.',
-            ], 404);
-        }
-
-        return response()->json([
-            'nom_ar'         => $citoyen->nom_ar,
-            'prenom_ar'      => $citoyen->prenom_ar,
-            'nom_fr'         => $citoyen->nom_fr,
-            'prenom_fr'      => $citoyen->prenom_fr,
-            'date_naissance' => $citoyen->date_naissance->format('Y-m-d'),
-            'lieu_naissance' => $citoyen->lieu_naissance,
-        ]);
+public function verifyCin($cin)
+{
+    // Simulation de validation : format lettre(s) + 5 ou 6 chiffres
+    if (preg_match('/^[A-Z]{1,2}\d{5,6}$/', strtoupper($cin))) {
+        return response()->json(['valid' => true, 'message' => 'CIN valide']);
     }
+    return response()->json(['valid' => false, 'message' => 'Format de CIN invalide'], 422);
+}
 }

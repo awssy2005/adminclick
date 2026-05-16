@@ -459,7 +459,11 @@ export default function AdminClickWizard({ onCancel }) {
                 onBlur={() => touch('region')}
               >
                 <option value="">-- {t('اختر الجهة', 'Choisir la région')} --</option>
-                {regions.map(r => <option key={r.id} value={r.id}>{t(r.ar, r.fr)}</option>)}
+                {regions.map(r => (
+                  <option key={r.id} value={r.id}>
+                    TEST - {r.fr || 'vide'} - {r.ar || 'vide'}
+                  </option>
+                ))}
               </select>
             </div>
 

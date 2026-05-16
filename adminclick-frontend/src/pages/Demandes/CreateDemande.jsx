@@ -1,14 +1,14 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../api';
-import AdminClickWizard from './AdminClickWizard';
+import ActeNaissanceWizard from './ActeNaissanceWizard'; // ← Votre nouveau wizard
 import { useLanguage } from '../../context/LanguageContext';
 import './CreateDemande.css';
 import DiagnosticAssistant from '../../components/Diagnostic/DiagnosticAssistant';
 
 export default function CreateDemande() {
   const [type, setType] = useState('');
-  const [showAdminClickWizard, setShowAdminClickWizard] = useState(false);
+  const [showWizard, setShowWizard] = useState(false);
   const [description, setDescription] = useState('');
   const [files, setFiles] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -16,33 +16,27 @@ export default function CreateDemande() {
   const [success, setSuccess] = useState('');
   const [showAssistant, setShowAssistant] = useState(false);
   const navigate = useNavigate();
-  const { lang, t } = useLanguage();
+  const { t } = useLanguage(); // ← plus besoin de lang
 
   const serviceTypes = [
-    { id: 'acte_naissance', name: t('رسم الولادة', 'Acte de Naissance'), icon: '👶', desc: t('نسخة كاملة أو موجزة', 'Copie intégrale ou extrait'), adminClick: true },
-    { id: 'certificat_residence', name: t('شهادة السكنى', 'Certificat de Résidence'), icon: '🏠', desc: t('إثبات السكن', 'Attestation de domicile') },
-    { id: 'carte_nationale', name: t('البطاقة الوطنية', "Carte Nationale d'Identité"), icon: '🪪', desc: t('إنشاء أو تجديد', 'Création ou renouvellement') },
-    { id: 'extrait_casier', name: t('السجل العدلي', 'Extrait de Casier Judiciaire'), icon: '⚖️', desc: t('بطاقة رقم 3', 'Bulletin n°3') },
-    { id: 'attestation_travail', name: t('شهادة العمل', 'Attestation de Travail'), icon: '💼', desc: t('شهادة المشغل', 'Certificat employeur') },
+    { id: 'acte_naissance', nameKey: 'birth_certificate', icon: '👶', descKey: 'birth_cert_desc', useWizard: true },
+    { id: 'certificat_residence', nameKey: 'residence_cert', icon: '🏠', descKey: 'residence_cert_desc', useWizard: false },
+    { id: 'carte_nationale', nameKey: 'national_id', icon: '🪪', descKey: 'national_id_desc', useWizard: false },
+    { id: 'extrait_casier', nameKey: 'criminal_record', icon: '⚖️', descKey: 'criminal_record_desc', useWizard: false },
+    { id: 'attestation_travail', nameKey: 'work_cert', icon: '💼', descKey: 'work_cert_desc', useWizard: false },
   ];
 
-  const handleFileChange = (e) => {
-    setFiles(Array.from(e.target.files));
-  };
+  const handleFileChange = (e) => setFiles(Array.from(e.target.files));
 
-  const handleServiceSelect = (s) => {
-    setType(s.id);
-    if (s.adminClick) {
-      setShowAdminClickWizard(true);
-    } else {
-      setShowAdminClickWizard(false);
-    }
+  const handleServiceSelect = (service) => {
+    setType(service.id);
+    setShowWizard(service.useWizard);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!type) {
-      setError('Veuillez sélectionner un type de document.');
+      setError(t('select_service_required'));
       return;
     }
     setError('');
@@ -57,17 +51,17 @@ export default function CreateDemande() {
       const res = await api.post('/demandes', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
-      setSuccess(`Demande #${res.data.id} soumise avec succès !`);
+      setSuccess(t('demande_submitted', { id: res.data.id }));
       setTimeout(() => navigate('/dashboard'), 2000);
     } catch (err) {
-      setError(err.response?.data?.message || 'Erreur lors de la soumission.');
+      setError(err.response?.data?.message || t('submission_error'));
     } finally {
       setLoading(false);
     }
   };
 
-  // ── If acte de naissance is selected → show AdminClick wizard ──
-  if (showAdminClickWizard) {
+  // Affichage du wizard pour l'acte de naissance
+  if (showWizard) {
     return (
       <div className="create-demande">
         <div className="container">
@@ -75,35 +69,35 @@ export default function CreateDemande() {
             <button
               className="btn btn-secondary"
               style={{ marginBottom: '1rem' }}
-              onClick={() => { setShowAdminClickWizard(false); setType(''); }}
+              onClick={() => { setShowWizard(false); setType(''); }}
             >
-              ← {t('العودة لاختيار الخدمة', 'Retour au choix du service')}
+              ← {t('back_to_service_selection')}
             </button>
           </div>
-          <AdminClickWizard onCancel={() => navigate('/dashboard')} />
+          <ActeNaissanceWizard onCancel={() => navigate('/dashboard')} />
         </div>
       </div>
     );
   }
 
-  // ── Default create form for other document types ──
+  // Formulaire classique pour les autres documents
   return (
     <div className="create-demande">
       <div className="container">
         <div className="create-header animate-fade-in-up">
-          <h1 className="create-title">📝 {t('طلب جديد', 'Nouvelle demande')}</h1>
-          <p className="create-subtitle">{t('اختر نوع الوثيقة واملأ الاستمارة', 'Sélectionnez le type de document et remplissez le formulaire')}</p>
+          <h1 className="create-title">📝 {t('new_request')}</h1>
+          <p className="create-subtitle">{t('new_request_subtitle')}</p>
           <div className="create-helper-banner animate-fade-in-up" style={{ animationDelay: '0.05s' }}>
             <div className="helper-text">
               <span className="helper-icon">💡</span>
-              <span>{t('لديك حالة خاصة أو مشكلة؟', 'Vous avez un cas complexe ou un problème ?')}</span>
+              <span>{t('complex_case_prompt')}</span>
             </div>
-            <button 
-              type="button" 
+            <button
+              type="button"
               className="btn btn-secondary btn-sm"
               onClick={() => setShowAssistant(true)}
             >
-              {t('مساعد التشخيص الذكي', 'Assistant de diagnostic intelligent')}
+              {t('diagnostic_assistant')}
             </button>
           </div>
         </div>
@@ -123,9 +117,9 @@ export default function CreateDemande() {
         )}
 
         <form onSubmit={handleSubmit} className="create-form animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
-          {/* Service type selection */}
+          {/* Sélection du type de document */}
           <div className="form-section">
-            <h2 className="form-section-title">{t('نوع الوثيقة', 'Type de document')}</h2>
+            <h2 className="form-section-title">{t('document_type')}</h2>
             <div className="service-select-grid">
               {serviceTypes.map((s) => (
                 <label
@@ -138,13 +132,13 @@ export default function CreateDemande() {
                     name="type"
                     value={s.id}
                     checked={type === s.id}
-                    onChange={() => { }}
+                    onChange={() => {}}
                     className="sr-only"
                   />
                   <span className="service-select-icon">{s.icon}</span>
-                  <span className="service-select-name">{s.name}</span>
-                  <span className="service-select-desc">{s.desc}</span>
-                  {s.adminClick && (
+                  <span className="service-select-name">{t(s.nameKey)}</span>
+                  <span className="service-select-desc">{t(s.descKey)}</span>
+                  {s.useWizard && (
                     <span className="service-adminclick-badge">🧾 AdminClick</span>
                   )}
                   {type === s.id && <span className="service-select-check">✓</span>}
@@ -153,25 +147,27 @@ export default function CreateDemande() {
             </div>
           </div>
 
-          {/* Description */}
+          {/* Description (optionnel) */}
           <div className="form-section">
-            <h2 className="form-section-title">{t('معلومات إضافية', 'Informations complémentaires')}</h2>
+            <h2 className="form-section-title">{t('additional_info')}</h2>
             <div className="form-group">
-              <label className="form-label" htmlFor="description">{t('وصف (اختياري)', 'Description (optionnel)')}</label>
+              <label className="form-label" htmlFor="description">
+                {t('description_optional')}
+              </label>
               <textarea
                 id="description"
                 className="form-input form-textarea"
-                placeholder={t('أضف تفاصيل أو توضيحات حول طلبك...', 'Ajoutez des détails ou précisions sur votre demande...')}
+                placeholder={t('description_placeholder')}
                 rows={4}
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-              ></textarea>
+              />
             </div>
           </div>
 
-          {/* File upload */}
+          {/* Upload de fichiers */}
           <div className="form-section">
-            <h2 className="form-section-title">{t('الوثائق المرفقة', 'Documents joints')}</h2>
+            <h2 className="form-section-title">{t('attached_documents')}</h2>
             <div className="file-upload-zone">
               <input
                 type="file"
@@ -185,10 +181,10 @@ export default function CreateDemande() {
                 <span className="file-upload-icon">📎</span>
                 <span className="file-upload-text">
                   {files.length > 0
-                    ? `${files.length} ${t('ملفات مختارة', 'fichier(s) sélectionné(s)')}`
-                    : t('انقر لإضافة ملفات (PDF, JPG, PNG)', 'Cliquez pour ajouter des fichiers (PDF, JPG, PNG)')}
+                    ? `${files.length} ${t('files_selected')}`
+                    : t('click_to_add_files')}
                 </span>
-                <span className="file-upload-hint">{t('الحجم الأقصى: 10 ميجا بايت لكل ملف', 'Taille max: 10 Mo par fichier')}</span>
+                <span className="file-upload-hint">{t('max_file_size')}</span>
               </label>
             </div>
             {files.length > 0 && (
@@ -204,9 +200,15 @@ export default function CreateDemande() {
           </div>
 
           <div className="create-actions">
-            <button type="button" className="btn btn-secondary" onClick={() => navigate(-1)}>{t('إلغاء', 'Annuler')}</button>
+            <button type="button" className="btn btn-secondary" onClick={() => navigate(-1)}>
+              {t('cancel')}
+            </button>
             <button type="submit" className="btn btn-primary btn-lg" disabled={loading}>
-              {loading ? <span className="spinner" style={{ width: 20, height: 20, borderWidth: 2 }}></span> : t('إرسال الطلب', 'Soumettre la demande')}
+              {loading ? (
+                <span className="spinner" style={{ width: 20, height: 20, borderWidth: 2 }} />
+              ) : (
+                t('submit_request')
+              )}
             </button>
           </div>
         </form>

@@ -177,10 +177,16 @@
   border-radius: 10px;
   font-size: 0.9rem;
   font-family: inherit;
-  background: var(--bg-surface, #f8fafc);
-  color: var(--text-primary, #1e293b);
-  transition: border-color 0.2s, box-shadow 0.2s;
-  outline: none;
+  background-color: white !important;
+  color: black !important;
+  height: 45px !important;
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+.wq-input option {
+  color: black !important;
+  background-color: white !important;
 }
 .wq-input:focus {
   border-color: #1a7fc1;
